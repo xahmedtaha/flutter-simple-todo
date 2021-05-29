@@ -6,9 +6,10 @@ import 'package:todo/db/todo_model.dart';
 
 class TodoCard extends StatefulWidget {
   final Todo todo;
-  final VoidCallback onEdit;
+  final Function(Todo) onEdit;
 
-  TodoCard({Key? key, required this.todo, required this.onEdit}) : super(key: key);
+  TodoCard({Key? key, required this.todo, required this.onEdit})
+      : super(key: key);
 
   @override
   _TodoCardState createState() => _TodoCardState(todo: todo);
@@ -22,26 +23,7 @@ class _TodoCardState extends State<TodoCard> {
 
   @override
   Widget build(BuildContext context) {
-    Color flagColor;
-    switch (todo.priority) {
-      case 'Urgent':
-        flagColor = Colors.red;
-        break;
-      case 'Important':
-        flagColor = Colors.green;
-        break;
-      default:
-        flagColor = Colors.grey;
-    }
     return Container(
-      decoration: new BoxDecoration(
-        border: new Border(
-          bottom: new BorderSide(
-            color: Colors.grey,
-            width: .2,
-          ),
-        ),
-      ),
       child: ListTile(
         contentPadding: EdgeInsets.only(
           right: 15,
@@ -52,26 +34,28 @@ class _TodoCardState extends State<TodoCard> {
             context: context,
             builder: (context) => CreateTodoBottomsheet(
               todo: todo,
+              onSave: widget.onEdit,
             ),
-            isScrollControlled: true,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
             ),
-          ).whenComplete(widget.onEdit);
+          );
         },
-        leading: Checkbox(
-          onChanged: (bool? value) {
-            setState(() {
-              todo.done = value!;
-              todoProvider.update(todo);
-            });
-          },
-          activeColor: Colors.teal,
-          value: todo.done,
-        ),
-        trailing: Icon(
-          Icons.flag,
-          color: flagColor,
+        leading: Transform.scale(
+          scale: 1.2,
+          child: Checkbox(
+            onChanged: (bool? value) {
+              setState(() {
+                todo.done = value!;
+                todoProvider.update(todo);
+              });
+            },
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4),
+            ),
+            activeColor: Colors.teal,
+            value: todo.done,
+          ),
         ),
         title: Text(
           todo.title,

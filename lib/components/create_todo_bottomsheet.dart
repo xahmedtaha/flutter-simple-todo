@@ -6,8 +6,10 @@ import 'package:todo/db/todo_model.dart';
 
 class CreateTodoBottomsheet extends StatefulWidget {
   final Todo? todo;
+  final Function(Todo) onSave;
 
-  CreateTodoBottomsheet({this.todo});
+  CreateTodoBottomsheet(
+      {this.todo, required this.onSave});
 
   @override
   _CreateTodoBottomsheetState createState() =>
@@ -19,16 +21,13 @@ class _CreateTodoBottomsheetState extends State<CreateTodoBottomsheet> {
   late Todo todo;
 
   _CreateTodoBottomsheetState(initTodo) {
-    if (initTodo == null) {
-      todo = Todo(title: '', notes: '', priority: 'Normal');
-    } else {
-      todo = initTodo;
-    }
+    todo = initTodo ?? Todo(title: '', notes: '', priority: 'Normal');
   }
 
   void saveTodo() async {
     if (!todo.title.isBlank!) {
       await todoProvider.insert(todo);
+      widget.onSave(todo);
       Get.back();
     }
   }
@@ -40,16 +39,19 @@ class _CreateTodoBottomsheetState extends State<CreateTodoBottomsheet> {
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         Container(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.only(
+            left: 18,
+            right: 18,
+            top: 10,
+          ),
           child: Row(
-            children: <Widget>[
+            children: [
               Expanded(
-                flex: 1,
                 child: TextFormField(
                   initialValue: todo.title,
                   decoration: InputDecoration(
                     border: InputBorder.none,
-                    hintText: 'Add todo...',
+                    hintText: 'New todo...',
                     hintStyle: TextStyle(color: Colors.grey),
                   ),
                   autofocus: true,
@@ -63,68 +65,21 @@ class _CreateTodoBottomsheetState extends State<CreateTodoBottomsheet> {
                   onEditingComplete: saveTodo,
                 ),
               ),
-              IconButton(
+              TextButton(
                 onPressed: todo.title.isBlank! ? null : saveTodo,
-                icon: Icon(
-                  Icons.check,
-                ),
-                tooltip: 'Add',
-                color: Colors.teal,
+                child: Text('SAVE'),
               ),
             ],
           ),
         ),
         Padding(
           padding: const EdgeInsets.only(
-            right: 12,
-            left: 12,
+            right: 18,
+            left: 18,
             bottom: 10,
           ),
-          child: ToggleButtons(
-            borderRadius: BorderRadius.circular(6),
-            children: <Widget>[
-              Tooltip(
-                message: 'Normal',
-                child: Icon(
-                  Icons.flag,
-                  color: Colors.grey,
-                ),
-              ),
-              Tooltip(
-                message: 'Important',
-                child: Icon(
-                  Icons.flag,
-                  color: Colors.green,
-                ),
-              ),
-              Tooltip(
-                message: 'Urgent',
-                child: Icon(
-                  Icons.flag,
-                  color: Colors.red,
-                ),
-              ),
-            ],
-            onPressed: (index) {
-              setState(() {
-                switch (index) {
-                  case 0:
-                    todo.priority = 'Normal';
-                    break;
-                  case 1:
-                    todo.priority = 'Important';
-                    break;
-                  case 2:
-                    todo.priority = 'Urgent';
-                    break;
-                }
-              });
-            },
-            isSelected: [
-              todo.priority == 'Normal',
-              todo.priority == 'Important',
-              todo.priority == 'Urgent'
-            ],
+          child: Row(
+            children: [],
           ),
         ),
         SizedBox(

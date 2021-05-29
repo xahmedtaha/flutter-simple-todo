@@ -14,7 +14,7 @@ class TodoProvider {
       onCreate: (db, version) {
         // Run the CREATE TABLE statement on the database.
         return db.execute(
-          'CREATE TABLE todos(id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, notes TEXT, priority STRING NULLABLE, done BOOLEAN NOT NULL CHECK (done IN (0, 1)))',
+          'CREATE TABLE todos(id STRING PRIMARY KEY, title TEXT, notes TEXT, priority STRING NULLABLE, done BOOLEAN NOT NULL CHECK (done IN (0, 1)))',
         );
       },
       // Set the version. This executes the onCreate function and provides a
@@ -50,7 +50,7 @@ class TodoProvider {
         .update('todos', todo.toMap(), where: 'id = ?', whereArgs: [todo.id]);
   }
 
-  Future<int> delete(int id) async {
+  Future<int> delete(String id) async {
     return await db.delete('todos', where: 'id = ?', whereArgs: [id]);
   }
 
