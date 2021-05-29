@@ -64,92 +64,96 @@ class _HomeScreenState extends State<HomeScreen> {
             if (snapshot.connectionState == ConnectionState.done) {
               if (snapshot.hasError) {
                 return Center(
-                  child: Text(
-                    'An error happened while retrieving todos, please restart the app. \nIf the problem persists, try deleting the app\'s storage.',
-                    style: TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.bold,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      'An error happened while retrieving todos, please restart the app. \nIf the problem persists, try deleting the app\'s storage.',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 );
               } else if (snapshot.hasData) {
                 todos = snapshot.data!;
-                if (snapshot.data!.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'Add some todos !',
-                      style: GoogleFonts.pacifico(
-                        color: Colors.grey,
-                      ),
-                    ),
-                  );
-                }
-
-                return AnimatedList(
-                  key: animatedListKey,
-                  initialItemCount: todos.length,
-                  itemBuilder: (context, index, animation) {
-                    final todo = todos[index];
-                    return SizeTransition(
-                      sizeFactor: animation,
-                      child: Dismissible(
-                        key: Key(todo.id.toString()),
-                        child: TodoCard(
-                          todo: todo,
-                          onEdit: (Todo editedTodo) {
-                            setState(() {
-                              todos[index] = editedTodo;
-                            });
-                          },
+                return todos.isEmpty
+                    ? Center(
+                        child: Text(
+                          'Add some todos !',
+                          style: GoogleFonts.pacifico(
+                            color: Colors.grey,
+                          ),
                         ),
-                        onDismissed: (direction) {
-                          todos.removeAt(index);
-                          animatedListKey.currentState?.removeItem(
-                            index,
-                            (context, animation) =>
-                                Container(), // Show nothing while animating out.. the Dismissible widget will handle the animation.
-                          );
-                          todoProvider.delete(todo.id);
-                          ScaffoldMessenger.of(context).clearSnackBars();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              behavior: SnackBarBehavior.floating,
-                              content: Text('Todo removed.'),
-                              action: SnackBarAction(
-                                label: 'UNDO',
-                                onPressed: () async {
-                                  await todoProvider.insert(todo);
-                                  todos.insert(index, todo);
-                                  animatedListKey.currentState
-                                      ?.insertItem(index);
+                      )
+                    : AnimatedList(
+                        key: animatedListKey,
+                        initialItemCount: todos.length,
+                        itemBuilder: (context, index, animation) {
+                          final todo = todos[index];
+                          return SizeTransition(
+                            axis: Axis.vertical,
+                            sizeFactor: animation,
+                            child: Dismissible(
+                              key: Key(todo.id.toString()),
+                              child: TodoCard(
+                                todo: todo,
+                                onEdit: (Todo editedTodo) {
+                                  setState(() {
+                                    todos[index] = editedTodo;
+                                  });
                                 },
                               ),
+                              onDismissed: (direction) {
+                                setState(() {
+                                  todos.removeAt(index);
+                                  animatedListKey.currentState?.removeItem(
+                                    index,
+                                    (context, animation) =>
+                                        Container(), // Show nothing while animating out.. the Dismissible widget will handle the animation.
+                                  );
+                                });
+                                todoProvider.delete(todo.id);
+                                ScaffoldMessenger.of(context).clearSnackBars();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    behavior: SnackBarBehavior.floating,
+                                    content: Text('Todo removed.'),
+                                    action: SnackBarAction(
+                                      label: 'UNDO',
+                                      onPressed: () async {
+                                        await todoProvider.insert(todo);
+                                        todos.insert(index, todo);
+                                        animatedListKey.currentState
+                                            ?.insertItem(index);
+                                      },
+                                    ),
+                                  ),
+                                );
+                              },
+                              background: Container(
+                                color: Colors.red,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    ListTile(
+                                      title: Text(
+                                        'Delete',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                      leading: Icon(
+                                        Icons.delete,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              direction: DismissDirection.startToEnd,
                             ),
                           );
                         },
-                        background: Container(
-                          color: Colors.red,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              ListTile(
-                                title: Text(
-                                  'Delete',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                                leading: Icon(
-                                  Icons.delete,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        direction: DismissDirection.startToEnd,
-                      ),
-                    );
-                  },
-                );
+                      );
               }
             }
 
@@ -171,8 +175,14 @@ class _HomeScreenState extends State<HomeScreen> {
               context: context,
               builder: (context) => CreateTodoBottomsheet(
                 onSave: (Todo newTodo) {
-                  todos.insert(0, newTodo);
-                  animatedListKey.currentState?.insertItem(0);
+                  if (todos.isEmpty)
+                    setState(() {
+                      todos.insert(0, newTodo);
+                    });
+                  else {
+                    todos.insert(0, newTodo);
+                    animatedListKey.currentState?.insertItem(0);
+                  }
                 },
               ),
               shape: RoundedRectangleBorder(
@@ -191,8 +201,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPressed: () {
                   showModalBottomSheet(
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(12)),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(12),
+                      ),
                     ),
                     context: context,
                     builder: (context) => StatefulBuilder(
