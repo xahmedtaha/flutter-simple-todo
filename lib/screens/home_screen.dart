@@ -98,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: FadeTransition(
                               opacity: animation,
                               child: Dismissible(
-                                key: UniqueKey(),
+                                key: ValueKey(todo.id.toString()),
                                 child: TodoCard(
                                   todo: todo,
                                   onEdit: (Todo editedTodo) {
@@ -135,7 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             todos.insert(index, todo);
                                             animatedListKey.currentState
                                                 ?.insertItem(
-                                              0,
+                                              index,
                                               duration:
                                                   Duration(milliseconds: 300),
                                             );
