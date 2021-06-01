@@ -92,64 +92,79 @@ class _HomeScreenState extends State<HomeScreen> {
                         itemBuilder: (context, index, animation) {
                           final todo = todos[index];
                           return SizeTransition(
+                            key: ValueKey(todo.id.toString()),
                             axis: Axis.vertical,
                             sizeFactor: animation,
-                            child: Dismissible(
-                              key: Key(todo.id.toString()),
-                              child: TodoCard(
-                                todo: todo,
-                                onEdit: (Todo editedTodo) {
-                                  setState(() {
-                                    todos[index] = editedTodo;
-                                  });
-                                },
-                              ),
-                              onDismissed: (direction) {
-                                setState(() {
-                                  todos.removeAt(index);
-                                  animatedListKey.currentState?.removeItem(
-                                    index,
-                                    (context, animation) =>
-                                        Container(), // Show nothing while animating out.. the Dismissible widget will handle the animation.
-                                  );
-                                });
-                                todoProvider.delete(todo.id);
-                                ScaffoldMessenger.of(context).clearSnackBars();
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    behavior: SnackBarBehavior.floating,
-                                    content: Text('Todo removed.'),
-                                    action: SnackBarAction(
-                                      label: 'UNDO',
-                                      onPressed: () async {
-                                        await todoProvider.insert(todo);
-                                        todos.insert(index, todo);
-                                        animatedListKey.currentState
-                                            ?.insertItem(index);
-                                      },
-                                    ),
-                                  ),
-                                );
-                              },
-                              background: Container(
-                                color: Colors.red,
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    ListTile(
-                                      title: Text(
-                                        'Delete',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                      leading: Icon(
-                                        Icons.delete,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
+                            child: FadeTransition(
+                              opacity: animation,
+                              child: Dismissible(
+                                key: UniqueKey(),
+                                child: TodoCard(
+                                  todo: todo,
+                                  onEdit: (Todo editedTodo) {
+                                    setState(() {
+                                      todos[index] = editedTodo;
+                                    });
+                                  },
                                 ),
+                                onDismissed: (direction) {
+                                  setState(() {
+                                    todos.removeAt(index);
+                                    animatedListKey.currentState?.removeItem(
+                                      index,
+                                      (context, animation) =>
+                                          Container(), // Show nothing while animating out.. the Dismissible widget will handle the animation.
+                                    );
+                                  });
+                                  todoProvider.delete(todo.id);
+                                  ScaffoldMessenger.of(context)
+                                      .clearSnackBars();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      behavior: SnackBarBehavior.floating,
+                                      content: Text('Todo removed.'),
+                                      action: SnackBarAction(
+                                        label: 'UNDO',
+                                        onPressed: () async {
+                                          await todoProvider.insert(todo);
+                                          if (todos.isEmpty)
+                                            setState(() {
+                                              todos.insert(index, todo);
+                                            });
+                                          else {
+                                            todos.insert(index, todo);
+                                            animatedListKey.currentState
+                                                ?.insertItem(
+                                              0,
+                                              duration:
+                                                  Duration(milliseconds: 300),
+                                            );
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  );
+                                },
+                                background: Container(
+                                  color: Colors.red,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      ListTile(
+                                        title: Text(
+                                          'Delete',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                        leading: Icon(
+                                          Icons.delete,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                direction: DismissDirection.startToEnd,
                               ),
-                              direction: DismissDirection.startToEnd,
                             ),
                           );
                         },
@@ -181,7 +196,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     });
                   else {
                     todos.insert(0, newTodo);
-                    animatedListKey.currentState?.insertItem(0);
+                    animatedListKey.currentState?.insertItem(
+                      0,
+                      duration: Duration(milliseconds: 300),
+                    );
                   }
                 },
               ),
